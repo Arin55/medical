@@ -46,7 +46,7 @@ export default function CheckoutPage() {
 
   const total = cart.reduce((sum, item) => sum + (item.medicine.price * item.quantity), 0)
 
-  const handleOrder = async (e: React.FormEvent) => {
+  const handleOrder = (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!user) {
@@ -61,70 +61,35 @@ export default function CheckoutPage() {
       return
     }
 
-    try {
-      // Save order to MongoDB
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          medicines: cart.map(item => ({
-            id: item.medicine.id,
-            name: item.medicine.name,
-            quantity: item.quantity,
-            price: item.medicine.price
-          })),
-          total,
-          address,
-          phone,
-          paymentMethod,
-          status: 'pending'
-        }),
-      })
+    // Generate order ID
+    const id = 'ORD-' + Date.now()
+    setOrderId(id)
 
-      const data = await response.json()
-      
-      if (data.success) {
-        const orderId = data.data._id || data.data.id
-        setOrderId(orderId)
-        
-        // Clear cart
-        updateCart([])
-        localStorage.removeItem('cart')
-        
-        alert(`Order placed successfully! Your Order ID is: ${orderId}`)
-      } else {
-        throw new Error(data.error || 'Failed to place order')
-      }
-    } catch (error: any) {
-      console.error('Error placing order:', error)
-      // Fallback to localStorage if API fails
-      const id = 'ORD-' + Date.now()
-      setOrderId(id)
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]')
-      orders.push({
-        id,
-        userId: user.id,
-        medicines: cart.map(item => ({
-          id: item.medicine.id,
-          name: item.medicine.name,
-          quantity: item.quantity,
-          price: item.medicine.price
-        })),
-        total,
-        address,
-        phone,
-        paymentMethod,
-        status: 'pending',
-        date: new Date().toISOString()
-      })
-      localStorage.setItem('orders', JSON.stringify(orders))
-      updateCart([])
-      localStorage.removeItem('cart')
-      alert(`Order placed successfully! Your Order ID is: ${id}`)
-    }
+    // Save order to localStorage
+    const orders = JSON.parse(localStorage.getItem('orders') || '[]')
+    orders.push({
+      id,
+      userId: user.id,
+      medicines: cart.map(item => ({
+        id: item.medicine.id,
+        name: item.medicine.name,
+        quantity: item.quantity,
+        price: item.medicine.price
+      })),
+      total,
+      address,
+      phone,
+      paymentMethod,
+      status: 'pending',
+      date: new Date().toISOString()
+    })
+    localStorage.setItem('orders', JSON.stringify(orders))
+
+    // Clear cart
+    updateCart([])
+    localStorage.removeItem('cart')
+
+    alert(`Order placed successfully! Your Order ID is: ${id}`)
   }
 
   if (orderId) {

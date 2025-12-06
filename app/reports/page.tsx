@@ -21,25 +21,9 @@ export default function ReportsPage() {
     }
     setUser(currentUser)
 
-    // Load reports from MongoDB API
-    const loadReports = async () => {
-      try {
-        const response = await fetch(`/api/reports?userId=${currentUser.id}`)
-        const data = await response.json()
-        if (data.success) {
-          setReports(data.data)
-        } else {
-          throw new Error('Failed to load reports')
-        }
-      } catch (error) {
-        console.error('Error loading reports:', error)
-        // Fallback to localStorage
-        const savedReports = JSON.parse(localStorage.getItem('reports') || '[]')
-        setReports(savedReports.filter((rpt: any) => rpt.userId === currentUser.id))
-      }
-    }
-
-    loadReports()
+    // Load reports from localStorage
+    const savedReports = JSON.parse(localStorage.getItem('reports') || '[]')
+    setReports(savedReports.filter((rpt: any) => rpt.userId === currentUser.id))
   }, [router])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +37,7 @@ export default function ReportsPage() {
     }
   }
 
-  const handleUpload = async (e: React.FormEvent) => {
+  const handleUpload = (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!reportName || !reportType || !selectedFile) {
@@ -61,64 +45,29 @@ export default function ReportsPage() {
       return
     }
 
-    try {
-      // Create file URL (in production, upload to cloud storage)
-      const fileUrl = URL.createObjectURL(selectedFile)
+    // Create file URL
+    const fileUrl = URL.createObjectURL(selectedFile)
 
-      // Save report to MongoDB
-      const response = await fetch('/api/reports', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          name: reportName,
-          type: reportType,
-          fileUrl: fileUrl,
-          fileName: selectedFile.name
-        }),
-      })
-
-      const data = await response.json()
-      
-      if (data.success) {
-        const newReport = data.data
-        setReports([...reports, newReport])
-        alert('Report uploaded successfully!')
-        setReportName('')
-        setReportType('')
-        setSelectedFile(null)
-        // Reset file input
-        const fileInput = document.getElementById('file-input') as HTMLInputElement
-        if (fileInput) fileInput.value = ''
-      } else {
-        throw new Error(data.error || 'Failed to upload report')
-      }
-    } catch (error: any) {
-      console.error('Error uploading report:', error)
-      // Fallback to localStorage
-      const fileUrl = URL.createObjectURL(selectedFile)
-      const newReport = {
-        id: 'RPT-' + Date.now(),
-        userId: user.id,
-        name: reportName,
-        type: reportType,
-        date: new Date().toISOString(),
-        file: fileUrl,
-        fileUrl: fileUrl,
-        fileName: selectedFile.name
-      }
-      const updatedReports = [...reports, newReport]
-      setReports(updatedReports)
-      localStorage.setItem('reports', JSON.stringify(updatedReports))
-      alert('Report uploaded successfully!')
-      setReportName('')
-      setReportType('')
-      setSelectedFile(null)
-      const fileInput = document.getElementById('file-input') as HTMLInputElement
-      if (fileInput) fileInput.value = ''
+    const newReport = {
+      id: 'RPT-' + Date.now(),
+      userId: user.id,
+      name: reportName,
+      type: reportType,
+      date: new Date().toISOString(),
+      file: fileUrl
     }
+
+    const updatedReports = [...reports, newReport]
+    setReports(updatedReports)
+    localStorage.setItem('reports', JSON.stringify(updatedReports))
+
+    alert('Report uploaded successfully!')
+    setReportName('')
+    setReportType('')
+    setSelectedFile(null)
+    // Reset file input
+    const fileInput = document.getElementById('file-input') as HTMLInputElement
+    if (fileInput) fileInput.value = ''
   }
 
   if (!user) {
@@ -213,17 +162,17 @@ export default function ReportsPage() {
           ) : (
             <div className="space-y-4">
               {reports.map((report) => (
-                <div key={report._id || report.id} className="p-4 bg-gray-50 rounded-lg">
+                <div key={report.id} className="p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-semibold">{report.name}</h3>
                       <p className="text-sm text-gray-600">Type: {report.type}</p>
                       <p className="text-sm text-gray-600">
-                        Date: {new Date(report.createdAt || report.date).toLocaleDateString()}
+                        Date: {new Date(report.date).toLocaleDateString()}
                       </p>
                     </div>
                     <a
-                      href={report.fileUrl || report.file}
+                      href={report.file}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-secondary text-sm py-2 px-4"

@@ -59,45 +59,16 @@ export default function AdminPage() {
     setAdminDoctors(doctors)
     setAdminMedicines(medicines)
     
-    // Load data from MongoDB API
-    const loadData = async () => {
-      try {
-        // Load appointments
-        const aptResponse = await fetch('/api/appointments')
-        const aptData = await aptResponse.json()
-        if (aptData.success) {
-          setAppointments(aptData.data)
-        }
-
-        // Load orders
-        const orderResponse = await fetch('/api/orders')
-        const orderData = await orderResponse.json()
-        if (orderData.success) {
-          setOrders(orderData.data)
-        }
-
-        // Load users
-        const userResponse = await fetch('/api/users')
-        const userData = await userResponse.json()
-        if (userData.success) {
-          setUsers(userData.data)
-        }
-      } catch (error) {
-        console.error('Error loading admin data:', error)
-        // Fallback to localStorage
-        const savedAppointments = JSON.parse(localStorage.getItem('appointments') || '[]')
-        const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]')
-        const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
-        setAppointments(savedAppointments)
-        setOrders(savedOrders)
-        setUsers(savedUsers.length > 0 ? savedUsers : [
-          { id: '1', email: 'user@example.com', name: 'John Doe', role: 'user' },
-          { id: '2', email: 'admin@example.com', name: 'Admin User', role: 'admin' }
-        ])
-      }
-    }
-
-    loadData()
+    const savedAppointments = JSON.parse(localStorage.getItem('appointments') || '[]')
+    const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]')
+    const savedUsers = JSON.parse(localStorage.getItem('users') || '[]')
+    
+    setAppointments(savedAppointments)
+    setOrders(savedOrders)
+    setUsers(savedUsers.length > 0 ? savedUsers : [
+      { id: '1', email: 'user@example.com', name: 'John Doe', role: 'user' },
+      { id: '2', email: 'admin@example.com', name: 'Admin User', role: 'admin' }
+    ])
   }, [router])
 
   const handleDoctorSubmit = (e: React.FormEvent) => {
@@ -548,7 +519,7 @@ export default function AdminPage() {
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Manage Appointments</h2>
           <div className="space-y-4">
             {appointments.map((apt: any) => (
-              <div key={apt._id || apt.id} className="p-4 bg-gray-50 rounded-lg">
+              <div key={apt.id} className="p-4 bg-gray-50 rounded-lg">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-semibold">{apt.doctorName}</h3>
@@ -558,7 +529,7 @@ export default function AdminPage() {
                     <p className="text-gray-600">Symptoms: {apt.symptoms}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-500">ID: {apt._id || apt.id}</p>
+                    <p className="text-sm text-gray-500">ID: {apt.id}</p>
                     <span className={`px-2 py-1 rounded text-sm ${
                       apt.status === 'confirmed' ? 'bg-green-100 text-green-700' :
                       apt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
@@ -582,11 +553,11 @@ export default function AdminPage() {
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Manage Orders</h2>
           <div className="space-y-4">
             {orders.map((order: any) => (
-              <div key={order._id || order.id} className="p-4 bg-gray-50 rounded-lg">
+              <div key={order.id} className="p-4 bg-gray-50 rounded-lg">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-semibold">Order #{order._id || order.id}</h3>
-                    <p className="text-gray-600">Date: {new Date(order.createdAt || order.date).toLocaleDateString()}</p>
+                    <h3 className="font-semibold">Order #{order.id}</h3>
+                    <p className="text-gray-600">Date: {new Date(order.date).toLocaleDateString()}</p>
                     <p className="text-gray-600">Address: {order.address}</p>
                     <p className="text-gray-600">Phone: {order.phone}</p>
                     <p className="text-gray-600">Payment: {order.paymentMethod}</p>
@@ -620,7 +591,7 @@ export default function AdminPage() {
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Manage Users</h2>
           <div className="space-y-4">
             {users.map((u: any) => (
-              <div key={u._id || u.id} className="p-4 bg-gray-50 rounded-lg">
+              <div key={u.id} className="p-4 bg-gray-50 rounded-lg">
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="font-semibold">{u.name}</h3>

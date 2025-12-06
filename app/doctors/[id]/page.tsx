@@ -25,7 +25,7 @@ export default function DoctorDetailPage() {
     }
   }, [params.id])
 
-  const handleBookAppointment = async (e: React.FormEvent) => {
+  const handleBookAppointment = (e: React.FormEvent) => {
     e.preventDefault()
     const user = getCurrentUser()
     
@@ -36,70 +36,35 @@ export default function DoctorDetailPage() {
       return
     }
 
-    try {
-      // Save appointment to MongoDB
-      const response = await fetch('/api/appointments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          doctorId: doctor?.id,
-          doctorName: doctor?.name,
-          date: selectedDate,
-          time: selectedTime,
-          patientName,
-          phone,
-          symptoms,
-          status: 'pending',
-          userId: user.id
-        }),
-      })
+    // Generate appointment ID
+    const id = 'APT-' + Date.now()
+    setAppointmentId(id)
+    
+    // Save appointment to localStorage
+    const appointments = JSON.parse(localStorage.getItem('appointments') || '[]')
+    appointments.push({
+      id,
+      doctorId: doctor?.id,
+      doctorName: doctor?.name,
+      date: selectedDate,
+      time: selectedTime,
+      patientName,
+      phone,
+      symptoms,
+      status: 'pending',
+      userId: user.id
+    })
+    localStorage.setItem('appointments', JSON.stringify(appointments))
 
-      const data = await response.json()
-      
-      if (data.success) {
-        const appointmentId = data.data._id || data.data.id
-        setAppointmentId(appointmentId)
-        setShowForm(false)
-        alert(`Appointment booked successfully! Your Appointment ID is: ${appointmentId}`)
-        
-        // Reset form
-        setSelectedDate('')
-        setSelectedTime('')
-        setPatientName('')
-        setPhone('')
-        setSymptoms('')
-      } else {
-        throw new Error(data.error || 'Failed to book appointment')
-      }
-    } catch (error: any) {
-      console.error('Error booking appointment:', error)
-      // Fallback to localStorage if API fails
-      const id = 'APT-' + Date.now()
-      setAppointmentId(id)
-      const appointments = JSON.parse(localStorage.getItem('appointments') || '[]')
-      appointments.push({
-        id,
-        doctorId: doctor?.id,
-        doctorName: doctor?.name,
-        date: selectedDate,
-        time: selectedTime,
-        patientName,
-        phone,
-        symptoms,
-        status: 'pending',
-        userId: user.id
-      })
-      localStorage.setItem('appointments', JSON.stringify(appointments))
-      setShowForm(false)
-      alert(`Appointment booked successfully! Your Appointment ID is: ${id}`)
-      setSelectedDate('')
-      setSelectedTime('')
-      setPatientName('')
-      setPhone('')
-      setSymptoms('')
-    }
+    setShowForm(false)
+    alert(`Appointment booked successfully! Your Appointment ID is: ${id}`)
+    
+    // Reset form
+    setSelectedDate('')
+    setSelectedTime('')
+    setPatientName('')
+    setPhone('')
+    setSymptoms('')
   }
 
   if (!doctor) {

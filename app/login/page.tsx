@@ -13,41 +13,19 @@ export default function LoginPage() {
   const [name, setName] = useState('')
   const [error, setError] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
     if (isLogin) {
-      try {
-        // Login via API
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-        })
-
-        const data = await response.json()
-        
-        if (data.success) {
-          setCurrentUser(data.data)
-          router.push('/dashboard')
-        } else {
-          setError(data.error || 'Invalid email or password')
-        }
-      } catch (error) {
-        console.error('Login error:', error)
-        // Fallback to local auth
-        const user = login(email, password)
-        if (user) {
-          router.push('/dashboard')
-        } else {
-          setError('Invalid email or password')
-        }
+      const user = login(email, password)
+      if (user) {
+        router.push('/dashboard')
+      } else {
+        setError('Invalid email or password')
       }
     } else {
-      // Signup
+      // Simple signup
       if (!name || !email || !password) {
         setError('Please fill all fields')
         return
@@ -57,36 +35,15 @@ export default function LoginPage() {
         return
       }
       
-      try {
-        // Signup via API
-        const response = await fetch('/api/users', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password, name, role: 'user' }),
-        })
-
-        const data = await response.json()
-        
-        if (data.success) {
-          setCurrentUser(data.data)
-          router.push('/dashboard')
-        } else {
-          setError(data.error || 'Failed to create account')
-        }
-      } catch (error) {
-        console.error('Signup error:', error)
-        // Fallback to local signup
-        const newUser = {
-          id: Date.now().toString(),
-          email,
-          name,
-          role: 'user' as const
-        }
-        setCurrentUser(newUser)
-        router.push('/dashboard')
+      // Create new user
+      const newUser = {
+        id: Date.now().toString(),
+        email,
+        name,
+        role: 'user' as const
       }
+      setCurrentUser(newUser)
+      router.push('/dashboard')
     }
   }
 

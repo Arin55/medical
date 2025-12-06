@@ -23,48 +23,15 @@ export default function DashboardPage() {
     setUser(currentUser)
     setProfile({ name: currentUser.name, email: currentUser.email, phone: '' })
 
-    // Load data from MongoDB API
-    const loadData = async () => {
-      try {
-        // Fetch appointments
-        const aptResponse = await fetch(`/api/appointments?userId=${currentUser.id}`)
-        const aptData = await aptResponse.json()
-        if (aptData.success) {
-          setAppointments(aptData.data)
-        } else {
-          throw new Error('Failed to load appointments')
-        }
+    // Load data from localStorage
+    const savedAppointments = JSON.parse(localStorage.getItem('appointments') || '[]')
+    const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]')
+    const savedReports = JSON.parse(localStorage.getItem('reports') || '[]')
 
-        // Fetch orders
-        const orderResponse = await fetch(`/api/orders?userId=${currentUser.id}`)
-        const orderData = await orderResponse.json()
-        if (orderData.success) {
-          setOrders(orderData.data)
-        } else {
-          throw new Error('Failed to load orders')
-        }
-
-        // Fetch reports
-        const reportResponse = await fetch(`/api/reports?userId=${currentUser.id}`)
-        const reportData = await reportResponse.json()
-        if (reportData.success) {
-          setReports(reportData.data)
-        } else {
-          throw new Error('Failed to load reports')
-        }
-      } catch (error) {
-        console.error('Error loading data:', error)
-        // Fallback to localStorage
-        const savedAppointments = JSON.parse(localStorage.getItem('appointments') || '[]')
-        const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]')
-        const savedReports = JSON.parse(localStorage.getItem('reports') || '[]')
-        setAppointments(savedAppointments.filter((apt: any) => apt.userId === currentUser.id))
-        setOrders(savedOrders.filter((ord: any) => ord.userId === currentUser.id))
-        setReports(savedReports.filter((rpt: any) => rpt.userId === currentUser.id))
-      }
-    }
-
-    loadData()
+    // Filter by current user
+    setAppointments(savedAppointments.filter((apt: any) => apt.userId === currentUser.id))
+    setOrders(savedOrders.filter((ord: any) => ord.userId === currentUser.id))
+    setReports(savedReports.filter((rpt: any) => rpt.userId === currentUser.id))
   }, [router])
 
   if (!user) {
@@ -129,7 +96,7 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-4">
                 {appointments.map((apt: any) => (
-                  <div key={apt._id || apt.id} className="p-4 bg-gray-50 rounded-lg">
+                  <div key={apt.id} className="p-4 bg-gray-50 rounded-lg">
                     <div className="flex justify-between items-start">
                       <div>
                         <h3 className="font-semibold text-lg">{apt.doctorName}</h3>
@@ -147,7 +114,7 @@ export default function DashboardPage() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-500">ID: {apt._id || apt.id}</p>
+                        <p className="text-sm text-gray-500">ID: {apt.id}</p>
                       </div>
                     </div>
                   </div>
@@ -165,11 +132,11 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-4">
                 {orders.map((order: any) => (
-                  <div key={order._id || order.id} className="p-4 bg-gray-50 rounded-lg">
+                  <div key={order.id} className="p-4 bg-gray-50 rounded-lg">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h3 className="font-semibold">Order #{order._id || order.id}</h3>
-                        <p className="text-gray-600">Date: {new Date(order.createdAt || order.date).toLocaleDateString()}</p>
+                        <h3 className="font-semibold">Order #{order.id}</h3>
+                        <p className="text-gray-600">Date: {new Date(order.date).toLocaleDateString()}</p>
                         <p className="text-gray-600">Address: {order.address}</p>
                         <p className="text-gray-600">Payment: {order.paymentMethod}</p>
                       </div>
@@ -211,11 +178,11 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-4">
                 {reports.map((report: any) => (
-                  <div key={report._id || report.id} className="p-4 bg-gray-50 rounded-lg">
+                  <div key={report.id} className="p-4 bg-gray-50 rounded-lg">
                     <h3 className="font-semibold">{report.name}</h3>
                     <p className="text-gray-600">Type: {report.type}</p>
-                    <p className="text-gray-600">Date: {new Date(report.createdAt || report.date).toLocaleDateString()}</p>
-                    <a href={report.fileUrl || report.file} target="_blank" rel="noopener noreferrer" className="text-medical-blue hover:underline text-sm">
+                    <p className="text-gray-600">Date: {new Date(report.date).toLocaleDateString()}</p>
+                    <a href={report.file} target="_blank" rel="noopener noreferrer" className="text-medical-blue hover:underline text-sm">
                       View Report
                     </a>
                   </div>

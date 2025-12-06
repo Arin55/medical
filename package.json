@@ -7,12 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test-db": "node scripts/test-connection.js"
   },
   "dependencies": {
-    "dotenv": "^17.2.3",
-    "mongodb": "^6.21.0",
-    "mongoose": "^8.20.2",
     "next": "14.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
